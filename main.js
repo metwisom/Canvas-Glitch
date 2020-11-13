@@ -1,69 +1,118 @@
-﻿
-var requestAnimationFrame = window.requestAnimationFrame;
+﻿var resizeFactor = 1;
+var centerX = 1;
+var centerY = 1;
+const canvas = document.getElementById("canvas");
+const scene = canvas.getContext("2d");
+scene.sillStyle = "#050505";
 
-var canvas = document.getElementById('canvas');
+/**
+ * Settings
+ */
+const subHeight = 40; // any value in pixels
+const subPadding = 500; // any value in pixels
+const frameGlitchChance = 0.1; // 0-1
+const tileGlitchChance = 0.1; // 0-1
+const noiseUrl = "./assets/noise.png";
+const monsterUrl = "./assets/monster.jpg";
 
-canvas.style.width = '100vw';
-canvas.style.height = '100vh';
+const noise = new Image();
+noise.src = noiseUrl;
+const noiseLoaded = new Promise((res) => (noise.onload = res));
 
-var resize_canvas = () => {
+const monster = new Image();
+monster.src = monsterUrl;
+const monsterLoaded = new Promise((res) => (monster.onload = res));
+
+Promise.all([noiseLoaded, noiseLoaded]).then((res) => {
+  requestAnimationFrame(draw);
+  const resizeСanvas = () => {
     canvas.width = canvas.getBoundingClientRect().width;
     canvas.height = canvas.getBoundingClientRect().height;
-};
-resize_canvas()
 
-window.addEventListener('resize', () => resize_canvas());
+    resizeFactor = Math.min(
+      canvas.width / monster.width,
+      canvas.height / monster.height
+    );
 
-var scene = canvas.getContext("2d");
-
-
-var noise = new Image();
-noise.src = '/noise.png'
-
-var image = new Image();
-image.src = '/id-monster.jpg'
-image.onload = () => requestAnimationFrame(draw);
+    centerX = canvas.width / 2 - (monster.width * resizeFactor) / 2;
+    centerY = canvas.height / 2 - (monster.height * resizeFactor) / 2;
+  };
+  resizeСanvas();
+  window.addEventListener("resize", () => resizeСanvas());
+});
 
 function draw() {
-    scene.sillStyle = '#050505'
-    scene.fillRect(0, 0, canvas.width, canvas.height)
+  scene.fillRect(0, 0, canvas.width, canvas.height);
 
-    let koef = Math.min(canvas.width / image.width, canvas.height / image.height); //Коеффицент для ресайза
-    let centerX = canvas.width / 2 - image.width * koef / 2;
-    let centerY = canvas.height / 2 - image.height * koef / 2;
+  let offset = 0;
+  if (Math.random() < frameGlitchChance) {
+    offset = Math.random() * subPadding - subPadding / 2;
+  }
+  for (let tile = 0; tile <= monster.height; tile += ~~subHeight) {
+    let tileOffset = 0;
+    if (offset && Math.random() < tileGlitchChance) {
+      tileOffset = offset;
+    }
 
-    if (sub_height.value <= 0) {
-        sub_height.value = 1;
-    }
-    let sdvig = 0;
-    //if (Math.random() > Math.random() * 2) как варик
-    if (Math.random() > 0.9) { // 10% что произойдет глитч т.е примерно 6 раз в секнду при 60 кадрах
-        sdvig = Math.random() * sub_padding.value - sub_padding.value / 2;
-    }
-    for (let tile = 0; tile <= image.height; tile += ~~sub_height.value) { // тайл это горизонтальная полока картинки заданой высоты
-        let local_sdvig = 0;
-        if (Math.random() > 0.5) { // 50% что не будем гличить тайл
-            local_sdvig = sdvig;
-        }
+    scene.drawImage(
+      monster,
+      0,
+      tile,
+      monster.width,
+      subHeight,
+      centerX + tileOffset,
+      centerY + tile * resizeFactor,
+      monster.width * resizeFactor,
+      subHeight * resizeFactor
+    );
 
-        scene.drawImage(image, 0, tile, image.width, sub_height.value, centerX + local_sdvig, centerY + tile * koef, image.width * koef, sub_height.value * koef);
-        scene.save();
-        scene.scale(-1, 1);
-        //scene.drawImage(v, 0, 0, width*-1, height);
-        scene.drawImage(image, 0, tile, image.width, sub_height.value, -centerX + local_sdvig - image.width * koef, centerY + tile * koef , -image.width * koef, sub_height.value * koef);
-        scene.drawImage(image, 0, tile, image.width, sub_height.value, -centerX + local_sdvig + image.width * koef, centerY + tile * koef , -image.width * koef, sub_height.value * koef);
-        scene.restore();
-    }
-    x_bias = Math.random() * noise.width;
-    y_bias = Math.random() * noise.height;
+    scene.save();
+    scene.scale(-1, 1);
 
-    scene.globalAlpha = 1;
-    for (let x = -noise.width; x < canvas.width; x += noise.width) {
-        for (let y = -noise.height; y < canvas.height; y += noise.height) {
-            scene.drawImage(noise, x +x_bias, y +y_bias, noise.width, noise.height);
-            scene.drawImage(noise, x +x_bias, y +y_bias, noise.width, noise.height);
-        }
+    scene.drawImage(
+      monster,
+      0,
+      tile,
+      monster.width,
+      subHeight,
+      -centerX + tileOffset - monster.width * resizeFactor,
+      centerY + tile * resizeFactor,
+      -monster.width * resizeFactor,
+      subHeight * resizeFactor
+    );
+    scene.drawImage(
+      monster,
+      0,
+      tile,
+      monster.width,
+      subHeight,
+      -centerX + tileOffset + monster.width * resizeFactor,
+      centerY + tile * resizeFactor,
+      -monster.width * resizeFactor,
+      subHeight * resizeFactor
+    );
+    scene.restore();
+  }
+
+  const noiseXBias = Math.random() * noise.width;
+  const noiseYBias = Math.random() * noise.height;
+  for (let x = -noise.width; x < canvas.width; x += noise.width) {
+    for (let y = -noise.height; y < canvas.height; y += noise.height) {
+      scene.drawImage(
+        noise,
+        x + noiseXBias,
+        y + noiseYBias,
+        noise.width,
+        noise.height
+      );
+      scene.drawImage(
+        noise,
+        x + noiseXBias,
+        y + noiseYBias,
+        noise.width,
+        noise.height
+      );
     }
-    scene.globalAlpha = 1;
-    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
 }
