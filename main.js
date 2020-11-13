@@ -12,8 +12,8 @@ const subHeight = 40; // any value in pixels
 const subPadding = 500; // any value in pixels
 const frameGlitchChance = 0.1; // 0-1
 const tileGlitchChance = 0.1; // 0-1
-const noiseUrl = "./test/noise.png";
-const monsterUrl = "./test/assets/monster.jpg";
+const noiseUrl = "./assets/noise.png";
+const monsterUrl = "./assets/monster.jpg";
 
 const noise = new Image();
 noise.src = noiseUrl;
