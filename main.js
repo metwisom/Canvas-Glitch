@@ -26,12 +26,12 @@ document.addEventListener("DOMContentLoaded", () => {
   noise.src = noiseUrl;
 });
 
-Promise.all([noiseLoaded, noiseLoaded]).then((res) => {
+Promise.all([noiseLoaded, monsterLoaded]).then((res) => {
   requestAnimationFrame(draw);
   const resizeСanvas = () => {
     canvas.width = canvas.getBoundingClientRect().width;
     canvas.height = canvas.getBoundingClientRect().height;
-
+    
     resizeFactor = Math.min(
       canvas.width / monster.width,
       canvas.height / monster.height
