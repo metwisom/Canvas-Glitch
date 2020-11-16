@@ -16,12 +16,15 @@ const noiseUrl = "./assets/noise.png";
 const monsterUrl = "./assets/monster.jpg";
 
 const noise = new Image();
-noise.src = noiseUrl;
 const noiseLoaded = new Promise((res) => (noise.onload = res));
 
 const monster = new Image();
-monster.src = monsterUrl;
 const monsterLoaded = new Promise((res) => (monster.onload = res));
+
+document.addEventListener("DOMContentLoaded", () => {
+  monster.src = monsterUrl;
+  noise.src = noiseUrl;
+});
 
 Promise.all([noiseLoaded, noiseLoaded]).then((res) => {
   requestAnimationFrame(draw);
